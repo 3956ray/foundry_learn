@@ -16,7 +16,7 @@ contract sentTest is Test {
         s = new Sent(address(r));
     }
 
-    function test_sendMes_delivers_to_received() public {
+    function test_sendMes_to_received() public {
         // 构造最小消息（from/to 会在 sendMes 内被覆盖）
         Sent.Mes memory mes = Sent.Mes({
             id: 1,

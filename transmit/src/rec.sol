@@ -1,24 +1,23 @@
-// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-contract received {
-
-    // 收到的数据结构
+ contract Rec {
     struct Mes {
         uint256 id;
         address from;
         address to;
     }
 
-    // 用来确认消息是否接收的flag
-    mapping(uint256 => bool) public receivedFlag;
+    // 有一个接收状态
+    mapping(uint256 => bool) public received;
 
     // 这是一个事件，表示说收到了信息
     event MessageReceived(uint256 indexed id, address indexed from, address indexed to);
 
-
+    // 接收信息函数
     function receiveMes(Mes calldata mes) external {
-        receivedFlag[mes.id] = true;
+        // 触发一个接收事件
+        require(!received[mes.id], "already received");
+        received[mes.id] = true;
         emit MessageReceived(mes.id, mes.from, mes.to);
     }
-}
+ }
