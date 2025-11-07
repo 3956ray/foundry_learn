@@ -24,6 +24,11 @@ const baseContract: OmniPointHardhat = {
     contractName: 'MyOFT', // Change to your deployed contract name
 }
 
+const optimismContract: OmniPointHardhat = {
+  eid: EndpointId.OPTSEP_V2_TESTNET,
+  contractName: 'MyOFT',
+}
+
 // Add more contracts here if you have more chains:
 // const baseContract: OmniPointHardhat = {
 //     eid: EndpointId.BASE_V2_TESTNET,

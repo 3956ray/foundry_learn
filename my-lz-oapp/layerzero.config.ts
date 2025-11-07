@@ -39,12 +39,14 @@ const EVM_ENFORCED_OPTIONS: OAppEnforcedOption[] = [
 // i.e. if you declare A,B there's no need to declare B,A
 const pathways: TwoWayConfig[] = [
     [
-        // baseContract, // Chain A contract
         arbitrumContract, // Chain A contract
 
         optimismContract, // Chain B contract
+        // 这是在说是谁的DVN？
         [['LayerZero Labs'], []], // [ requiredDVN[], [ optionalDVN[], threshold ] ]
+        // 这个是说在arbitrum上的DVN需要多少个共识节点才能完成验证？，并发送到OP？
         [1, 1], // [A to B confirmations, B to A confirmations]
+        // 
         [EVM_ENFORCED_OPTIONS, EVM_ENFORCED_OPTIONS], // Chain B enforcedOptions, Chain A enforcedOptions
     ],
 ]

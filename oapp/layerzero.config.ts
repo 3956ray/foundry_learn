@@ -1,0 +1,83 @@
+import { EndpointId } from '@layerzerolabs/lz-definitions'
+import { ExecutorOptionType } from '@layerzerolabs/lz-v2-utilities'
+import { TwoWayConfig, generateConnectionsConfig } from '@layerzerolabs/metadata-tools'
+import { OAppEnforcedOption, OmniPointHardhat } from '@layerzerolabs/toolbox-hardhat'
+
+const baseContract: OmniPointHardhat = {
+    eid: EndpointId.BASESEP_V2_TESTNET,
+    contractName: 'MyOApp',
+}
+
+// const optimismContract: OmniPointHardhat = {
+//   eid: EndpointId.OPTSEP_V2_TESTNET,
+//   contractName: 'MyOApp',
+// }
+
+const arbitrumContract: OmniPointHardhat = {
+    eid: EndpointId.ARBSEP_V2_TESTNET,
+    contractName: 'MyOApp',
+}
+
+// For this example's simplicity, we will use the same enforced options values for sending to all chains
+// For production, you should ensure `gas` is set to the correct value through profiling the gas usage of calling OApp._lzReceive(...) on the destination chain
+// To learn more, read https://docs.layerzero.network/v2/concepts/applications/oapp-standard#execution-options-and-enforced-settings
+// 似乎也可以直接在这里定义我的options？
+const EVM_ENFORCED_OPTIONS: OAppEnforcedOption[] = [
+    {
+        msgType: 1,
+        optionType: ExecutorOptionType.LZ_RECEIVE,
+        gas: 280000,
+        value: 0,
+    },
+    {
+        msgType: 3,
+        optionType: ExecutorOptionType.COMPOSE,
+        index: 0,
+        gas: 80000,
+        value: 0,
+    },
+]
+
+// To connect all the above chains to each other, we need the following pathways:
+// Base <-> Arbitrum
+
+// With the config generator, pathways declared are automatically bidirectional
+// i.e. if you declare A,B there's no need to declare B,A
+const pathways: TwoWayConfig[] = [
+    [
+        baseContract, // Chain A contract
+        arbitrumContract, // Chain B contract
+        [['LayerZero Labs'], []], // [ requiredDVN[], [ optionalDVN[], threshold ] ]
+        [1, 1], // [A to B confirmations, B to A confirmations]
+        [EVM_ENFORCED_OPTIONS, EVM_ENFORCED_OPTIONS], // Chain B enforcedOptions, Chain A enforcedOptio·ns
+    ],
+
+    // [
+    //     arbitrumContract, // Chain B contract
+    //     optimismContract, // Chain C contract
+    //     [['LayerZero Labs'], []], // [ requiredDVN[], [ optionalDVN[], threshold ] ]
+    //     [1, 1], // [A to B confirmations, B to A confirmations]
+    //     [EVM_ENFORCED_OPTIONS, EVM_ENFORCED_OPTIONS], // Chain B enforcedOptions, Chain A enforcedOptions
+    // ],
+    
+    // [
+    //     optimismContract, // Chain C contract
+    //     baseContract, // Chain A contract
+    //     [['LayerZero Labs'], []], // [ requiredDVN[], [ optionalDVN[], threshold ] ]
+    //     [1, 1], // [A to B confirmations, B to A confirmations]
+    //     [EVM_ENFORCED_OPTIONS, EVM_ENFORCED_OPTIONS], // Chain B enforcedOptions, Chain A enforcedOptions
+    // ],
+]
+
+export default async function () {
+    // Generate the connections config based on the pathways
+    const connections = await generateConnectionsConfig(pathways)
+    return {
+        contracts: [
+            { contract: baseContract }, 
+            { contract: arbitrumContract }, 
+            // { contract: optimismContract },
+        ],
+        connections,
+    }
+}
