@@ -14,8 +14,8 @@ contract MyOApp is OApp, OAppOptionsType3 {
 
     /// @notice Msg type for sending a string, for use in OAppOptionsType3 as an enforced option
     uint16 public constant SEND = 1;
-    /// @notice Msg type for automatic replies, allows enforced options for reply path
-    uint16 public constant REPLY = 2;
+    // /// @notice Msg type for automatic replies, allows enforced options for reply path
+    // uint16 public constant REPLY = 2;
 
     /// @notice Initialize with Endpoint V2 and owner address
     /// @param _endpoint The local chain's LayerZero Endpoint V2 address
@@ -79,6 +79,7 @@ contract MyOApp is OApp, OAppOptionsType3 {
         //
         //    combineOptions (from OAppOptionsType3) merges enforced options set by the contract owner
         //    with any additional execution options provided by the caller
+        
         _lzSend(
             _dstEid,
             _message,
@@ -135,7 +136,7 @@ contract MyOApp is OApp, OAppOptionsType3 {
 
         // 计算回传gas费
         MessagingFee memory msgFee = _quote(_origin.srcEid, _reply, baseReplyOptions, false);
-        uint256 nativeFee = msgFee.nativeFee;
+        // uint256 nativeFee = msgFee.nativeFee;
         // require(msg.value >= nativeFee, "NotEnoughNative: msg.value must equal nativeFee");
 
         
@@ -143,11 +144,25 @@ contract MyOApp is OApp, OAppOptionsType3 {
             _origin.srcEid,
             _reply,
             baseReplyOptions,
-            MessagingFee(nativeFee, 0),
-            payable(msg.sender)
+            // MessagingFee(nativeFee, 0),
+            msgFee,
+            payable(owner())
         );
     }
 
     // 合约接收原生 ETH 
     receive() external payable {}
+
+    // 重写_paynative：接收上下文用合约余额，外部发送用 msg.value
+    function _payNative(uint256 _nativeFee) internal override returns (uint256 nativeFee) {
+        if (msg.sender == address(endpoint)) {
+            // B 用合约余额支付回传
+            if (address(this).balance < _nativeFee) revert NotEnoughNative(address(this).balance);
+            return _nativeFee;
+        } else {
+            // A 链发钱来，用 msg.value 支付
+            if (msg.value < _nativeFee) revert NotEnoughNative(msg.value);
+            return msg.value;
+        }
+    }
 }
